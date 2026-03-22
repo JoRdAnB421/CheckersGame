@@ -64,7 +64,8 @@ def Main():
                 # If mouse clicks find coordinates and select piece as required
                 pos = pg.mouse.get_pos()
                 row, col = GetPosMouse(pos)
-                if (row&col>=0)&(row&col<8):
+                print(row,col)
+                if (min(row,col)>=0)&(max(row,col)<8):
                    game.Select(row, col)
             
             if event.type == pg.KEYDOWN:
