@@ -1,80 +1,49 @@
-'''
-Main script
-'''
-from constants import *
 import pygame as pg
-from board import Board
-from game import Game
+import asyncio
 
+from constants import *
+from game import Game
 
 pg.init()
 
-FPS = 60
-
 win = pg.display.set_mode((width, height))
-
-pg.display.set_caption('Checkers')
+pg.display.set_caption("Checkers")
 
 def GetPosMouse(pos):
-    '''
-    Finds mouse coordinates in terms of grid position
-
-    Input >>> pos = mouse coordinates
-
-    Output >>> row, col = grid position
-    '''
     x, y = pos
-    row = int((y-boardYLoc) // tilesize)
-    col = int((x-boardXLoc) // tilesize)
+    row = int((y - boardYLoc) // tilesize)
+    col = int((x - boardXLoc) // tilesize)
     return row, col
 
-def Main():
-    '''
-    main function to run
-    '''
+game = Game(win)
+clock = pg.time.Clock()
+
+async def main():
     running = True
-    finish = False
-    clock = pg.time.Clock()
-    game = Game(win) # Draw to surface
 
     while running:
-        clock.tick(FPS)
+        clock.tick(60)
 
-        if game.Winner() != None:
-            # If someone wins, freeze screen with winning text, r resets game
-            finish=True
-            while finish:
-                clock.tick(FPS)
-                for event in pg.event.get():
-                    if event.type == pg.QUIT:
-                        print('Quitting')
-                        running, finish = (False, False)
-                    if event.type == pg.KEYDOWN: 
-                        if event.key == pg.K_r:
-                            game.Reset()
-                            print('Reset')
-                            finish=False
-
-        for event in pg.event.get(pump=True):
+        for event in pg.event.get():
             if event.type == pg.QUIT:
-                print('Quitting')
-                running=False
+                running = False
 
             if event.type == pg.MOUSEBUTTONDOWN:
-                # If mouse clicks find coordinates and select piece as required
                 pos = pg.mouse.get_pos()
                 row, col = GetPosMouse(pos)
-                print(row,col)
-                if (min(row,col)>=0)&(max(row,col)<8):
-                   game.Select(row, col)
-            
+                if (min(row, col) >= 0) and (max(row, col) < 8):
+                    game.Select(row, col)
+
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_r:
                     game.Reset()
-                    print('Reset')
-                    
+
+        # Draw everything
         game.Update()
+
+        await asyncio.sleep(0)
 
     pg.quit()
 
-Main()
+# 🔑 THIS is the correct pygbag entry point
+asyncio.ensure_future(main())

@@ -1,4 +1,3 @@
-from numpy import piecewise, tile
 import pygame as pg
 from board import Board
 from ui import UI
@@ -13,7 +12,7 @@ class Game:
         '''
         Update the game pieces and board 
         '''
-
+        self.win.fill((255, 0, 0))
         self.board.Draw(self.win)
         self.ui.DrawText(self.win)
         self.DrawAvailableMoves(self.availableMoves)

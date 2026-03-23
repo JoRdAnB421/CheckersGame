@@ -1,7 +1,6 @@
 from constants import GREY, WHITE, BLACK, LIGHTBROWN, DARKBROWN, rows, cols, tilesize, boardXLoc, boardYLoc
 import pygame as pg
 import itertools
-import numpy as np
 from pieces import Piece
 from ui import UI
 

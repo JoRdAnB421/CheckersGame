@@ -1,4 +1,3 @@
-from numpy import False_
 from constants import BLACK, WHITE, GREY, tilesize, boardXLoc, boardYLoc, crown
 import pygame as pg
 

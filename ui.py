@@ -1,5 +1,4 @@
 import pygame as pg
-from regex import B
 from constants import BLACK, WHITE, boardXLoc, boardYLoc, height
 
 class UI:
