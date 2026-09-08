@@ -32,6 +32,8 @@ class Game:
         self.ui = UI()
         self.turn = WHITE
         self.availableMoves = {}
+        self.allAvailableMoves = self.board.GetAllMoves(self.turn)
+        print(self.allAvailableMoves)
 
     def Reset(self):
         '''
@@ -111,8 +113,11 @@ class Game:
         '''
         Switches turns from white to black, resetting the available moves every time
         '''
-        self.availableMoves = []
+        self.availableMoves = {}
+        
         if self.turn == WHITE:
             self.turn = BLACK
         else:
             self.turn = WHITE
+        self.board.canTake = False
+        self.allAvailableMoves = self.board.GetAllMoves(self.turn)

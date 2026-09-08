@@ -11,6 +11,7 @@ class Board:
     '''
     def __init__(self):
         self.board = []
+        self.canTake = False
         self.blackLeft = self.whiteLeft = 12
         self.blacKings = self.whiteKings = 0
         self.CreateBoard()
@@ -60,6 +61,23 @@ class Board:
         '''
         return(self.board[row][col])
     
+    def GetAllPieces(self, color):
+        '''
+        Gets the position of every piece for a given color useful in order to find all the available moves 
+        (including the restriction to have to capture when possible)
+        
+        Input  >>> color = the players turn
+        
+        Output >>> pieces = list of every piece for this player
+        '''
+        pieces = []
+        for j, row in enumerate(self.board):
+            for i, col in enumerate(row):
+                piece = self.GetPiece(i,j)
+                if piece!=0 and piece.color==color:
+                    pieces.append(piece)
+        return pieces
+
     def CreateBoard(self):
         '''
         Creates a 2D list storing the intial board state
@@ -115,6 +133,17 @@ class Board:
         else:
             return None
 
+    def GetAllMoves(self, color):
+        '''
+        Computes all the available moves of a given player
+        '''
+        pieces = self.GetAllPieces(color)
+        moves={}
+        for piece in pieces:
+            moves[piece] = self.GetAvailableMoves(piece)
+        
+        return moves
+
     def GetAvailableMoves(self, piece):
         '''
         Finds the available moves based on the selected piece.
@@ -138,6 +167,18 @@ class Board:
             moves.update(self._MoveLeft(row + 1, min(row+3, rows), 1, piece.color, left))
             moves.update(self._MoveRight(row + 1, min(row+3, rows), 1, piece.color, right))
 
+        takes = []
+        for key, value in moves.items():
+            if len(value)>0:
+                # Some capture moves so limit to these
+                takes.append(key)
+
+        if (self.canTake)&(len(takes)==0):
+            return {}
+        
+        if len(takes)>0:
+            self.canTake = True 
+            moves = {key: moves[key] for key in takes}
         return moves
     
     def _MoveLeft(self, start, stop, step, color, left, skipped=[]):
