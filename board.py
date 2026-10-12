@@ -223,13 +223,13 @@ class Board:
                     # If there was a piece we can check how close to the edge of the board we are
                     # And call this function again to search
                     if step == -1:
-                        row = max(r-3, 0)
+                        row = max(r-3, -1)
                     else:
                         row = min(r+3, rows)
 
                     # Search spaces ahead again
-                    moves.update(self._MoveLeft(r+step, row, step, color, left-1, skipped=last))
-                    moves.update(self._MoveRight(r+step, row, step, color, left+1, skipped=last))
+                    moves.update(self._MoveLeft(r+step, row, step, color, left-1, skipped=last + skipped))
+                    moves.update(self._MoveRight(r+step, row, step, color, left+1, skipped=last + skipped))
                 break
 
             elif current.color == color:
@@ -284,13 +284,13 @@ class Board:
                     # If there was a piece we can check how close to the edge of the board we are
                     # And call this function again to search
                     if step == -1:
-                        row = max(r-3, 0)
+                        row = max(r-3, -1)
                     else:
                         row = min(r+3, rows)
 
                     # Search spaces ahead again
-                    moves.update(self._MoveLeft(r+step, row, step, color, right-1, skipped=last))
-                    moves.update(self._MoveRight(r+step, row, step, color, right+1, skipped=last))
+                    moves.update(self._MoveLeft(r+step, row, step, color, right-1, skipped=last + skipped))
+                    moves.update(self._MoveRight(r+step, row, step, color, right+1, skipped=last + skipped))
                 break
 
             elif current.color == color:
