@@ -154,152 +154,77 @@ class Board:
         Output >>> moves = dictionary of available moves
         '''
         moves = {}
-        left = piece.col - 1
-        right = piece.col + 1
-        row = piece.row
+        directions = self._Directions(piece)
 
-        # Check the piece color and if it is a king to get the correct moves
-        if piece.color == WHITE or piece.king:
-            moves.update(self._MoveLeft(row - 1, max(row-3, -1), -1, piece.color, left))
-            moves.update(self._MoveRight(row - 1, max(row-3, -1), -1, piece.color, right))
-        
-        if piece.color == BLACK or piece.king:
-            moves.update(self._MoveLeft(row + 1, min(row+3, rows), 1, piece.color, left))
-            moves.update(self._MoveRight(row + 1, min(row+3, rows), 1, piece.color, right))
+        # Single diagonal steps onto empty squares
+        for dRow, dCol in directions:
+            r, c = piece.row + dRow, piece.col + dCol
+            if self._OnBoard(r, c) and self.board[r][c] == 0:
+                moves[(r, c)] = []
 
-        takes = []
-        for key, value in moves.items():
-            if len(value)>0:
-                # Some capture moves so limit to these
-                takes.append(key)
+        # Capture moves (including multi jumps)
+        takes = self._FindJumps(piece, piece.row, piece.col, directions, [])
 
         if (self.canTake)&(len(takes)==0):
             return {}
         
         if len(takes)>0:
+            # Some capture moves so limit to these
             self.canTake = True 
-            moves = {key: moves[key] for key in takes}
-        return moves
-    
-    def _MoveLeft(self, start, stop, step, color, left, skipped=[]):
-        '''
-        Finds the possible moves going to the left (up or down)
-        
-        Input >>> start = row to start looking for available spaces
-                  stop = row to stop looking for availble spaces 
-                  step = size of step (number of cols, rows stepping)
-                  color = piece.color what team the piece is from to determine the move direction
-                  left = column to the left of the current column
-                  skipped = list to store skipped over pieces
-        
-        Output >>> moves = dictionary of available moves
-                '''
-        # Dictionary for moves and list for last piece we jumped
-        moves = {}
-        last = []
-        
-        # Look at rows up to three away (multi jump)
-        for r in range(start, stop, step):
-            if left < 0:
-                # If at edge of board no moves 
-                break
-            
-            current = self.board[r][left] # position in question 
-            if current == 0:
-                # If space is empty look ahead and check what spaces are available to move to 
-                # This function is called recursively to check for multijumps
-                if skipped and not last:
-                    # if space 1 in front is free but we have skipped it is not available 
-                    break
-
-                elif skipped:
-                    # if there is a space behind an enemy piece add it as available
-                    moves[(r, left)] = last + skipped
-                else:
-                    # if we haven't moved yet free places in front are available
-                    moves[(r, left)] = last 
-
-                if last:
-                    # If there was a piece we can check how close to the edge of the board we are
-                    # And call this function again to search
-                    if step == -1:
-                        row = max(r-3, -1)
-                    else:
-                        row = min(r+3, rows)
-
-                    # Search spaces ahead again
-                    moves.update(self._MoveLeft(r+step, row, step, color, left-1, skipped=last + skipped))
-                    moves.update(self._MoveRight(r+step, row, step, color, left+1, skipped=last + skipped))
-                break
-
-            elif current.color == color:
-                # Can't jump over same color
-                break
-            
-            else:
-                # if there was a piece in front keep the position to check for skips
-                last = [current]
-            left -= 1
-
+            moves = takes
         return moves
 
-    def _MoveRight(self, start, stop, step, color, right, skipped=[]):
+    def _Directions(self, piece):
         '''
-        Finds the possible moves going to the right (up or down)
+        Finds the diagonal directions a piece is allowed to move in
         
-        Input >>> start = row to start looking for available spaces
-                  stop = row to stop looking for availble spaces 
-                  step = size of step (number of cols, rows stepping)
-                  color = piece.color what team the piece is from to determine the move direction
-                  right = column to the right of the current column
-                  skipped = list to store skipped over pieces
+        Input >>> piece = selected piece
         
-        Output >>> moves = dictionary of available moves
+        Output >>> directions = list of (row step, col step)
         '''
-        # Dictionary for moves and list for last piece we jumped
-        moves = {}
-        last = []
+        directions = []
+        if piece.color == WHITE or piece.king:
+            directions += [(-1, -1), (-1, 1)]
+        if piece.color == BLACK or piece.king:
+            directions += [(1, -1), (1, 1)]
+        return directions
+
+    def _OnBoard(self, row, col):
+        '''
+        Checks if a grid position is on the board
+        '''
+        return 0 <= row < rows and 0 <= col < cols
+
+    def _FindJumps(self, piece, row, col, directions, skipped):
+        '''
+        Finds the capture moves from a position, calling itself again from each landing square to find multi jumps.
+        Kings search in all four directions at every step so they can change direction mid-chain
         
-        # Look at rows up to three away (multi jump)
-        for r in range(start, stop, step):
-            if right >= cols:
-                # If at edge of board no moves 
-                break
-            
-            current = self.board[r][right] # position in question
-            if current == 0:
-                # If space is empty look ahead and check what spaces are available to move to 
-                # This function is called recursively to check for multijumps
-                if skipped and not last:
-                    # if space 1 in front is free but we have skipped it is not available 
-                    break
-                elif skipped:
-                    # if there is a space behind an enemy piece add it as available
-                    moves[(r, right)] = last + skipped
-                else:
-                    # if we haven't moved yet free places in front are available
-                    moves[(r, right)] = last
-
-                if last:
-                    # If there was a piece we can check how close to the edge of the board we are
-                    # And call this function again to search
-                    if step == -1:
-                        row = max(r-3, -1)
-                    else:
-                        row = min(r+3, rows)
-
-                    # Search spaces ahead again
-                    moves.update(self._MoveLeft(r+step, row, step, color, right-1, skipped=last + skipped))
-                    moves.update(self._MoveRight(r+step, row, step, color, right+1, skipped=last + skipped))
-                break
-
-            elif current.color == color:
-                # Can't jump over same color
-                break
-            
-            else:
-                # if there was a piece in front keep the position to check for skips
-                last = [current]
-            right += 1
+        Input >>> piece = piece that is moving
+                  row, col = position to jump from
+                  directions = directions the piece is allowed to move in
+                  skipped = list of pieces already taken this turn
         
-        return moves
+        Output >>> jumps = dictionary of landing squares and the pieces taken to get there
+        '''
+        jumps = {}
+        for dRow, dCol in directions:
+            landRow, landCol = row + 2*dRow, col + 2*dCol
+            if not self._OnBoard(landRow, landCol) or self.board[landRow][landCol] != 0:
+                # Need an empty square to land on
+                continue
+
+            middle = self.board[row + dRow][col + dCol]
+            if middle == 0 or middle.color == piece.color or middle in skipped:
+                # Can only jump an enemy piece, and only once per turn
+                continue
+
+            taken = skipped + [middle]
+            found = {(landRow, landCol): taken}
+            found.update(self._FindJumps(piece, landRow, landCol, directions, taken))
+
+            for square, chain in found.items():
+                # If two routes reach the same square keep the one that takes more pieces
+                if len(chain) > len(jumps.get(square, [])):
+                    jumps[square] = chain
+        return jumps
